@@ -1,0 +1,39 @@
+name: 🤖 Feedback Triage with Goose
+
+on:
+  issues:
+    types: [opened, reopened]
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐧 Install Goose CLI
+        run: |
+          curl -fsSL https://github.com/block/goose/releases/latest/download/goose-linux-x86_64.tar.gz | tar -xz
+          sudo mv goose /usr/local/bin/
+          goose --version
+
+      - name: 🤖 Analyze and Triage Issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          chmod +x scripts/triage.sh
+          ./scripts/triage.sh
+
+      - name: ✅ Triage Complete
+        run: echo "🎉 Issue #${{ github.event.issue.number }} has been triaged!"

@@ -1,0 +1,54 @@
+name: 🎉 Festival Feedback
+description: Share feedback about the festival
+title: "[FEEDBACK] "
+labels: ["festival-feedback", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing your festival feedback! 🎉
+        
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feedback Category
+      description: What area does this feedback relate to?
+      options:
+        - Event Organization
+        - Activities & Entertainment
+        - Food & Beverages
+        - Venue & Facilities
+        - Staff & Volunteers
+        - Communication
+        - Safety & Security
+        - Other
+    validations:
+      required: true
+      
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Your Feedback
+      description: Please share your feedback in detail
+      placeholder: Tell us about your experience...
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: sentiment
+    attributes:
+      label: Overall Sentiment
+      options:
+        - Very Positive
+        - Positive
+        - Neutral
+        - Negative
+        - Very Negative
+    validations:
+      required: true
+      
+  - type: textarea
+    id: suggestions
+    attributes:
+      label: Suggestions for Improvement
+      description: Any suggestions for how we can improve?

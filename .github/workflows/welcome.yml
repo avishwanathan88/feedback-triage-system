@@ -1,0 +1,32 @@
+name: 👋 Welcome First-Time Contributors
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    
+    steps:
+      - name: 👋 Welcome message for first-time contributors
+        uses: actions/first-interaction@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: |
+            🎉 **Welcome to the Feedback Triage System!**
+            
+            Thank you for creating your first issue! We really appreciate you taking the time to share your feedback.
+            
+            Our automated triage system (powered by Goose AI 🤖) will analyze your submission shortly and:
+            - ✨ Categorize your feedback
+            - 🏷️ Add appropriate labels
+            - 📊 Assign a priority level
+            - 💬 Provide initial feedback
+            
+            A team member will follow up soon. In the meantime, feel free to add any additional details or context!
+            
+            ---
+            *🤖 This is an automated message*
