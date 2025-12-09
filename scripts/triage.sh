@@ -44,7 +44,7 @@ EOF
 
 # Run goose to analyze the issue
 echo "🔍 Analyzing issue with Goose AI..."
-GOOSE_OUTPUT=$(goose run "$(cat /tmp/issue_analysis_prompt.txt)" --profile default 2>&1 | tail -n 50)
+GOOSE_OUTPUT=$(goose run --text "$(cat /tmp/issue_analysis_prompt.txt)" --no-session --quiet 2>&1 | tail -n 100)
 
 echo "Goose analysis output:"
 echo "$GOOSE_OUTPUT"

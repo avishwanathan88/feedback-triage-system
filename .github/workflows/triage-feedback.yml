@@ -36,4 +36,4 @@ jobs:
           ./scripts/triage.sh
 
       - name: ✅ Triage Complete
-        run: echo "🎉 Issue #${{ github.event.issue.number }} has been triaged!"
+        run: echo "Triage complete for issue ${{ github.event.issue.number }}"
