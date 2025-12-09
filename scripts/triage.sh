@@ -50,12 +50,26 @@ echo "Goose analysis output:"
 echo "$GOOSE_OUTPUT"
 
 # Extract JSON from goose output (handle markdown code blocks)
-# First try to extract from markdown code blocks
-TRIAGE_JSON=$(echo "$GOOSE_OUTPUT" | sed -n '/```json/,/```/p' | sed '1d;$d' | head -1)
+# Use awk to extract content between ```json and ``` markers
+TRIAGE_JSON=$(echo "$GOOSE_OUTPUT" | awk '/```json/,/```/' | sed '1d;$d' | tr -d '\n' | sed 's/  */ /g')
 
 # If that didn't work, try to find raw JSON
-if [ -z "$TRIAGE_JSON" ]; then
-    TRIAGE_JSON=$(echo "$GOOSE_OUTPUT" | grep -A 100 '{' | grep -B 100 '}' | sed -n '/^{/,/^}/p' | head -1)
+if [ -z "$TRIAGE_JSON" ] || [ "$TRIAGE_JSON" = " " ]; then
+    # Try to extract JSON using Python
+    TRIAGE_JSON=$(echo "$GOOSE_OUTPUT" | python3 -c "
+import sys
+import re
+text = sys.stdin.read()
+# Look for JSON block
+match = re.search(r'\`\`\`json\s*(\{.*?\})\s*\`\`\`', text, re.DOTALL)
+if match:
+    print(match.group(1).replace('\n', ' '))
+else:
+    # Try to find any JSON-like structure
+    match = re.search(r'(\{[^{}]*\"category\"[^{}]*\})', text, re.DOTALL)
+    if match:
+        print(match.group(1).replace('\n', ' '))
+" 2>/dev/null)
 fi
 
 if [ -z "$TRIAGE_JSON" ]; then
