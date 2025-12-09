@@ -49,8 +49,14 @@ GOOSE_OUTPUT=$(goose run --text "$(cat /tmp/issue_analysis_prompt.txt)" --no-ses
 echo "Goose analysis output:"
 echo "$GOOSE_OUTPUT"
 
-# Extract JSON from goose output (it might be wrapped in markdown)
-TRIAGE_JSON=$(echo "$GOOSE_OUTPUT" | grep -A 100 '{' | grep -B 100 '}' | sed -n '/^{/,/^}/p' | head -1)
+# Extract JSON from goose output (handle markdown code blocks)
+# First try to extract from markdown code blocks
+TRIAGE_JSON=$(echo "$GOOSE_OUTPUT" | sed -n '/```json/,/```/p' | sed '1d;$d' | head -1)
+
+# If that didn't work, try to find raw JSON
+if [ -z "$TRIAGE_JSON" ]; then
+    TRIAGE_JSON=$(echo "$GOOSE_OUTPUT" | grep -A 100 '{' | grep -B 100 '}' | sed -n '/^{/,/^}/p' | head -1)
+fi
 
 if [ -z "$TRIAGE_JSON" ]; then
     echo "⚠️  Could not extract JSON from goose output, using defaults"
@@ -60,11 +66,30 @@ fi
 echo "Extracted triage data:"
 echo "$TRIAGE_JSON"
 
-# Parse the JSON response
-CATEGORY=$(echo "$TRIAGE_JSON" | grep -o '"category":"[^"]*"' | cut -d'"' -f4)
-PRIORITY=$(echo "$TRIAGE_JSON" | grep -o '"priority":"[^"]*"' | cut -d'"' -f4)
-COMMENT=$(echo "$TRIAGE_JSON" | grep -o '"comment":"[^"]*"' | sed 's/"comment":"//;s/"$//')
-LABELS=$(echo "$TRIAGE_JSON" | grep -o '"labels":\[[^]]*\]' | sed 's/"labels":\[//;s/\]//;s/"//g')
+# Parse the JSON response using Python (available in GitHub Actions)
+PARSED=$(python3 -c "
+import json
+import sys
+try:
+    data = json.loads('''$TRIAGE_JSON''')
+    print(data.get('category', 'feedback'))
+    print(data.get('priority', 'medium'))
+    # Escape the comment for bash
+    comment = data.get('comment', '✨ Thank you for your feedback! We will review this shortly.')
+    print(comment.replace('\"', '\\\"').replace('\n', ' '))
+    print(','.join(data.get('labels', ['feedback', 'needs-review'])))
+except:
+    print('feedback')
+    print('medium')
+    print('✨ Thank you for your feedback! We will review this shortly.')
+    print('feedback,needs-review')
+" 2>/dev/null)
+
+# Split the parsed output
+CATEGORY=$(echo "$PARSED" | sed -n '1p')
+PRIORITY=$(echo "$PARSED" | sed -n '2p')
+COMMENT=$(echo "$PARSED" | sed -n '3p')
+LABELS=$(echo "$PARSED" | sed -n '4p')
 
 # Default values if parsing fails
 CATEGORY=${CATEGORY:-feedback}
